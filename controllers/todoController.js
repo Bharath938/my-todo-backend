@@ -1,10 +1,11 @@
 const Todo = require("../model/todoModel");
 
 const getTodos = async (req, res) => {
+  const { userId, username } = req.user;
   try {
-    const todos = await Todo.find({});
+    const todos = await Todo.find({ userId });
 
-    res.status(200).json(todos);
+    res.status(200).json({ todos, username });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -14,7 +15,7 @@ const createTodo = async (req, res) => {
   try {
     const todo = req.body;
 
-    const newTodo = new Todo(todo);
+    const newTodo = new Todo({ userId: req.user.userId, ...todo });
     await newTodo.save();
 
     res.status(201).json(newTodo);
@@ -24,17 +25,13 @@ const createTodo = async (req, res) => {
 };
 
 const todoUpdate = async (req, res) => {
+  const { userId } = req.user;
   try {
     const { id } = req.params;
-    const { todo, completed } = req.body;
-    console.log(req.body);
-    console.log(id);
-    const findTodo = await Todo.findByIdAndUpdate(
-      { _id: id },
-      { todo, completed },
-      { new: true }
-    );
-    const todos = await Todo.find({});
+    const findTodo = await Todo.findByIdAndUpdate({ _id: id }, req.body, {
+      new: true,
+    });
+    const todos = await Todo.find({ userId });
 
     res.status(200).json(todos);
   } catch (error) {
